@@ -7,6 +7,8 @@ from colorama import init,Fore,Style
 from vehicle import Vehicle
 from mission import Mission
 from despatch import Despatch
+from api import Api
+
 init()
 operatingsystem = platform.system()
 path = os.path.dirname(os.path.realpath(__file__))
@@ -89,6 +91,7 @@ class MissonChiefBot:
 
 
   def buildVehicles(self):
+    veh = Api.getVehicles(BASE_URL,browser)
     print("Building Vehicles")
     url = BASE_URL
     hrefs = []
@@ -100,14 +103,15 @@ class MissonChiefBot:
     for href in hrefs:
       vehicleId = href.split("/")[4]
       try:
-        for vehicle in self.vehicleList:
-          if vehicle.getID == vehicleId:
+        for vehicle in veh:
+          print(vehicle)
+          if vehicle.get("id") == vehicleId:
             #since the vehicle is already in the list, we can continue it.
             raise AlreadyExistsException()
-        browser.visit("https://www.missionchief.co.uk/vehicles/"+vehicleId)
-        vehicleName = browser.find_by_tag('h1').text
+        # browser.visit("https://www.missionchief.co.uk/vehicles/"+vehicleId)
+        vehicleName = vehicle.get("caption")
         vehicleType = browser.links.find_by_partial_href('/fahrzeugfarbe/').text
-        vehicleStatus = browser.find_by_xpath('//span[contains(@class, "building_list_fms")]').text    
+        vehicleStatus = vehicle.get("fms_real")    
         currVehicle = Vehicle(vehicleId,vehicleName,vehicleType,vehicleStatus)
         self.vehicleList.append(currVehicle)
       except AlreadyExistsException:
